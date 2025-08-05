@@ -2,89 +2,89 @@ const Tanque = require('../models/tanqueModel');
 const Categoria = require('../models/categoriaModel');
 
 const tanqueController = {
-    renderCreateForm: (req, res) => {
-        Categoria.getAll((err, categorias) => {
-            if (err) return res.status(500).json({ error: err });
+    renderCreateForm: async (req, res) => {
+        try {
+            const categorias = await Categoria.findAll();
             res.render('tanques/create', { categorias });
-        });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     },
 
-    createTanque: (req, res) => {
-        const novoTanque = {
-            nome: req.body.nome,
-            descricao: req.body.descricao,
-            preco: req.body.preco,
-            quantidade: req.body.quantidade,
-            categoria: req.body.categoria
-        };
-
-        Tanque.create(novoTanque, (err, id) => {
-            if (err) return res.status(500).json({ error: err });
-            res.redirect('/tanques');
-        });
-    },
-
-    getAllTanques: (req, res) => {
-        const categoria = req.query.categoria || null;
-
-        Tanque.getAll(categoria, (err, tanques) => {
-            if (err) return res.status(500).json({ error: err });
-
-            Categoria.getAll((err, categorias) => {
-                if (err) return res.status(500).json({ error: err });
-                res.render('tanques/index', { tanques, categorias, categoriaSelecionada: categoria });
+    createTanque: async (req, res) => {
+        try {
+            await Tanque.create({
+                nome: req.body.nome,
+                descricao: req.body.descricao,
+                preco: req.body.preco,
+                quantidade: req.body.quantidade,
+                categoria: req.body.categoria
             });
-        });
+            res.redirect('/tanques');
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     },
 
-    getTanqueById: (req, res) => {
-        const id = req.params.id;
+    getAllTanques: async (req, res) => {
+        const categoria = req.query.categoria || null;
+        try {
+            const where = categoria ? { categoria } : {};
+            const tanques = await Tanque.findAll({ where });
+            const categorias = await Categoria.findAll();
+            res.render('tanques/index', { tanques, categorias, categoriaSelecionada: categoria });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    },
 
-        Tanque.findById(id, (err, tanque) => {
-            if (err) return res.status(500).json({ error: err });
+    getTanqueById: async (req, res) => {
+        try {
+            const tanque = await Tanque.findByPk(req.params.id);
             if (!tanque) return res.status(404).json({ message: 'Tanque não encontrado' });
             res.render('tanques/show', { tanque });
-        });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     },
 
-    renderEditForm: (req, res) => {
-        const id = req.params.id;
-
-        Tanque.findById(id, (err, tanque) => {
-            if (err) return res.status(500).json({ error: err });
+    renderEditForm: async (req, res) => {
+        try {
+            const tanque = await Tanque.findByPk(req.params.id);
             if (!tanque) return res.status(404).json({ message: 'Tanque não encontrado' });
+            const categorias = await Categoria.findAll();
+            res.render('tanques/edit', { tanque, categorias });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    },
 
-            Categoria.getAll((err, categorias) => {
-                if (err) return res.status(500).json({ error: err });
-                res.render('tanques/edit', { tanque, categorias });
+    updateTanque: async (req, res) => {
+        try {
+            const tanque = await Tanque.findByPk(req.params.id);
+            if (!tanque) return res.status(404).json({ message: 'Tanque não encontrado' });
+            await tanque.update({
+                nome: req.body.nome,
+                descricao: req.body.descricao,
+                preco: req.body.preco,
+                quantidade: req.body.quantidade,
+                categoria: req.body.categoria
             });
-        });
+            res.redirect('/tanques');
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     },
 
-    updateTanque: (req, res) => {
-        const id = req.params.id;
-
-        const tanqueAtualizado = {
-            nome: req.body.nome,
-            descricao: req.body.descricao,
-            preco: req.body.preco,
-            quantidade: req.body.quantidade,
-            categoria: req.body.categoria
-        };
-
-        Tanque.update(id, tanqueAtualizado, (err) => {
-            if (err) return res.status(500).json({ error: err });
+    deleteTanque: async (req, res) => {
+        try {
+            const tanque = await Tanque.findByPk(req.params.id);
+            if (!tanque) return res.status(404).json({ message: 'Tanque não encontrado' });
+            await tanque.destroy();
             res.redirect('/tanques');
-        });
-    },
-
-    deleteTanque: (req, res) => {
-        const id = req.params.id;
-
-        Tanque.delete(id, (err) => {
-            if (err) return res.status(500).json({ error: err });
-            res.redirect('/tanques');
-        });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
 };
 
