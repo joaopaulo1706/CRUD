@@ -25,7 +25,6 @@ app.use(methodOverride('_method'));
 
 // Uso das rotas
 app.use('/', indexRoutes);
-app.use('/usuario', usuarioRoutes);
 app.use('/usuarios', usuarioRoutes);
 app.use('/produtos', produtoRoutes);
 app.use('/categorias', categoriaRoutes);
